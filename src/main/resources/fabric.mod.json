@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "shop-system",
+	"version": "${version}",
+	"name": "Shop System",
+	"description": "A Simple Shop System for SMPs",
+	"authors": [
+		"Jul Levi Strunz"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/shop-system/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"de.jullevistrunz.ShopSystem"
+		]
+	},
+	"mixins": [],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.21.7",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
