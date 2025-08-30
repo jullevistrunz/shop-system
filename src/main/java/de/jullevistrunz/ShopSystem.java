@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.WallSignBlock;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.EntityArgumentType;
@@ -22,11 +21,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.scoreboard.ScoreAccess;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.CommandManager;
@@ -38,6 +33,8 @@ import net.minecraft.util.math.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 public class ShopSystem implements ModInitializer {
@@ -87,7 +84,7 @@ public class ShopSystem implements ModInitializer {
             if (receivedStartCreditsScore.getScore() == 0) {
                 creditsScore.setScore(200);
                 receivedStartCreditsScore.setScore(1);
-            };
+            }
         });
 
         ServerTickEvents.START_SERVER_TICK.register(minecraftServer -> {
@@ -241,9 +238,19 @@ public class ShopSystem implements ModInitializer {
                 MinecraftServer server = world.getServer();
                 if (server == null) return ActionResult.CONSUME;
 
-                PlayerManager playerManager = world.getServer().getPlayerManager();
-                PlayerEntity ownerEntity = playerManager.getPlayer(owner.get());
-                if (ownerEntity == null) {
+                Scoreboard scoreboard = server.getScoreboard();
+                Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
+
+                ScoreHolder ownerScoreHolder = null;
+
+                for (ScoreHolder scoreHolder : scoreHolders) {
+                    if (Objects.equals(scoreHolder.getNameForScoreboard(), owner.get())) {
+                        ownerScoreHolder = scoreHolder;
+                        break;
+                    }
+                }
+
+                if (ownerScoreHolder == null) {
                     playerEntity.sendMessage(
                             Text.literal("Couldn't find shop owner!").withColor(16733525),
                             false
@@ -251,8 +258,10 @@ public class ShopSystem implements ModInitializer {
                     return ActionResult.CONSUME;
                 }
 
-                ScoreAccess ownerCredits = Helper.getScoreAccess("credits", ownerEntity);
-                if (ownerCredits == null) return ActionResult.CONSUME;
+                ScoreboardObjective creditsObjective = scoreboard.getNullableObjective("credits");
+                if (creditsObjective == null) return ActionResult.CONSUME;
+
+                ScoreAccess ownerCredits = scoreboard.getOrCreateScore(ownerScoreHolder, creditsObjective);
 
                 ownerCredits.setScore(ownerCredits.getScore() + price.get());
 
@@ -262,7 +271,7 @@ public class ShopSystem implements ModInitializer {
                         Text.literal(" for ").withColor(16777215),
                         Text.literal("$" + price.get()).withColor(4045567),
                         Text.literal(" from ").withColor(16777215),
-                        ownerEntity.getStyledDisplayName()
+                        ownerScoreHolder.getStyledDisplayName()
                 };
 
                 playerEntity.sendMessage(Helper.textBuilder(playerMessageArr), false);
@@ -273,10 +282,13 @@ public class ShopSystem implements ModInitializer {
                         Text.literal(" by selling ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
                         Text.literal(" to ").withColor(16777215),
-                        playerEntity.getStyledDisplayName()
+                        ownerScoreHolder.getStyledDisplayName()
                 };
 
-                ownerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
+                PlayerManager playerManager = server.getPlayerManager();
+                PlayerEntity ownerEntity = playerManager.getPlayer(owner.get());
+
+                if (ownerEntity != null) ownerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
 
                 return ActionResult.SUCCESS;
             }

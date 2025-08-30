@@ -11,15 +11,11 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.ComponentMap;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.scoreboard.ScoreAccess;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardEntry;
-import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -50,16 +46,15 @@ public class Commands {
         ScoreboardObjective creditsObjective = scoreboard.getNullableObjective("credits");
         if (creditsObjective == null) return 0;
 
-        Collection<ScoreboardEntry> creditsEntries = scoreboard.getScoreboardEntries(creditsObjective);
+        Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
+        for (ScoreHolder scoreHolder : scoreHolders) {
+             ScoreAccess creditsScoreAccess = scoreboard.getOrCreateScore(scoreHolder, creditsObjective);
 
-        for (ScoreboardEntry entry : creditsEntries) {
-            PlayerEntity entryPlayer = server.getPlayerManager().getPlayer(entry.owner());
-            if (entryPlayer == null) continue;
-
-            ScoreAccess creditsScoreAccess = Helper.getScoreAccess("credits", entryPlayer);
-            if (creditsScoreAccess == null) continue;
-
-            Text[] messageArr = { entryPlayer.getStyledDisplayName(), Text.literal(": ").withColor(16777215), Text.literal("$" + creditsScoreAccess.getScore()).withColor(4045567) };
+            Text[] messageArr = {
+                    scoreHolder.getStyledDisplayName(),
+                    Text.literal(": ").withColor(16777215),
+                    Text.literal("$" + creditsScoreAccess.getScore()).withColor(4045567)
+            };
 
             player.sendMessage(Helper.textBuilder(messageArr), false);
         }
