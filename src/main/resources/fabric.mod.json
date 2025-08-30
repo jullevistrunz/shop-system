@@ -3,7 +3,7 @@
 	"id": "shop-system",
 	"version": "${version}",
 	"name": "Shop System",
-	"description": "A Simple Shop System for SMPs",
+	"description": "A simple shop system for SMPs",
 	"authors": [
 		"Jul Levi Strunz"
 	],
