@@ -22,8 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 
 
 public class Commands {
@@ -47,17 +46,31 @@ public class Commands {
         if (creditsObjective == null) return 0;
 
         Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
+
+        Map<ScoreHolder, Integer> creditsScoreHolderMap = new HashMap<>();
+
         for (ScoreHolder scoreHolder : scoreHolders) {
              ScoreAccess creditsScoreAccess = scoreboard.getOrCreateScore(scoreHolder, creditsObjective);
 
-            Text[] messageArr = {
-                    scoreHolder.getStyledDisplayName(),
-                    Text.literal(": ").withColor(16777215),
-                    Text.literal("$" + creditsScoreAccess.getScore()).withColor(4045567)
-            };
+            if (creditsScoreAccess.getScore() <= 0) continue;
 
-            player.sendMessage(Helper.textBuilder(messageArr), false);
+            creditsScoreHolderMap.put(scoreHolder, creditsScoreAccess.getScore());
+
+
         }
+
+        // https://stackoverflow.com/a/33552682/15255405
+        creditsScoreHolderMap.entrySet().stream()
+                .sorted((e1, e2) -> -e1.getValue().compareTo(e2.getValue()))
+                .forEach(entry -> {
+                    Text[] messageArr = {
+                            entry.getKey().getStyledDisplayName(),
+                            Text.literal(": ").withColor(16777215),
+                            Text.literal("$" + entry.getValue()).withColor(4045567)
+                    };
+
+                    player.sendMessage(Helper.textBuilder(messageArr), false);
+                });
 
         return 1;
     }
