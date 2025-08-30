@@ -282,7 +282,7 @@ public class ShopSystem implements ModInitializer {
                         Text.literal(" by selling ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
                         Text.literal(" to ").withColor(16777215),
-                        ownerScoreHolder.getStyledDisplayName()
+                        playerEntity.getStyledDisplayName()
                 };
 
                 PlayerManager playerManager = server.getPlayerManager();
