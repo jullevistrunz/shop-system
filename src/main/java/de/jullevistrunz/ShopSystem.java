@@ -105,7 +105,6 @@ public class ShopSystem implements ModInitializer {
                 };
                 player.sendMessage(Helper.textBuilder(messageArr), false);
 
-                Helper.displayTotalCredits(player);
                 playerTickScore.setScore(0);
             }
         });
