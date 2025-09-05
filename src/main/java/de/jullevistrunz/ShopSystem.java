@@ -232,7 +232,7 @@ public class ShopSystem implements ModInitializer {
                 String itemType = removedItemStack.getItemName().getString();
 
                 playerCredits.setScore(playerCredits.getScore() - price.get());
-                playerEntity.giveItemStack(removedItemStack);
+                playerEntity.giveOrDropStack(removedItemStack);
 
                 MinecraftServer server = world.getServer();
                 if (server == null) return ActionResult.CONSUME;
