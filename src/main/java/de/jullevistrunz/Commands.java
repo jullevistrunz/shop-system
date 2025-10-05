@@ -123,7 +123,7 @@ public class Commands {
         return 1;
     }
 
-    public static int executeSignCommand (CommandContext<ServerCommandSource> context) {
+    public static int executeSignCommand(PlayerEntity partner, CommandContext<ServerCommandSource> context) {
         PlayerEntity player = context.getSource().getPlayer();
         if (player == null) return 0;
 
@@ -140,6 +140,12 @@ public class Commands {
 
         int price = IntegerArgumentType.getInteger(context, "price");
         int stackSize = IntegerArgumentType.getInteger(context, "stackSize");
+
+        if (partner != null && price % 2 != 0) {
+            player.sendMessage(Text.literal("When specifying a partner, the price must be divisible by two!").withColor(16733525),
+                    false);
+            return 0;
+        }
 
         ComponentMap componentMap = sign.getComponents();
         NbtComponent customDataComponent = componentMap.get(DataComponentTypes.CUSTOM_DATA);
@@ -160,6 +166,7 @@ public class Commands {
         signData.putInt("price", price);
         signData.putInt("stackSize", stackSize);
         signData.putString("owner", player.getNameForScoreboard());
+        if (partner !=  null) signData.putString("partner", partner.getNameForScoreboard());
 
         root.put(ShopSystem.MOD_ID, signData);
 
@@ -178,10 +185,17 @@ public class Commands {
                 Text.literal("Stack size: ").withColor(16777215),
                 Text.literal(stackSize + "x").withColor(4045567)
         };
+        Text[] ownerArr = {
+                Text.literal(partner == null ? "Owner: " : "Owners: ").withColor(16777215),
+                Objects.requireNonNull(player.getDisplayName()).copy().withColor(4045567),
+                Text.literal(partner == null ? "" : ",").withColor(16777215)
+        };
 
         SignText signText = new SignText();
-        signText = signText.withMessage(1, Helper.textBuilder(priceArr));
-        signText = signText.withMessage(2, Helper.textBuilder(stackSizeArr));
+        signText = signText.withMessage(0, Helper.textBuilder(priceArr));
+        signText = signText.withMessage(1, Helper.textBuilder(stackSizeArr));
+        signText = signText.withMessage(partner == null ? 3 : 2, Helper.textBuilder(ownerArr));
+        if (partner != null) signText = signText.withMessage(3, Objects.requireNonNull(partner.getDisplayName()).copy().withColor(4045567));
 
         sign.setText(signText, true);
 

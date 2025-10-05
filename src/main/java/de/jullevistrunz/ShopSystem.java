@@ -120,14 +120,24 @@ public class ShopSystem implements ModInitializer {
 
             parent.then(CommandManager.literal("pay")
                     .then(CommandManager.argument("recipient", EntityArgumentType.player())
-                            .then(CommandManager.argument("amount", IntegerArgumentType.integer())
+                            .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(Commands::executePayCommand))));
 
             parent.then(CommandManager.literal("sign")
-                            .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
-                                    .then(CommandManager.argument("price", IntegerArgumentType.integer(1))
-                                            .then(CommandManager.argument("stackSize", IntegerArgumentType.integer(1, 64))
-                                                    .executes(Commands::executeSignCommand)))));
+                    .then(CommandManager.argument("pos", BlockPosArgumentType.blockPos())
+                            .then(CommandManager.argument("price", IntegerArgumentType.integer(1))
+                                    .then(CommandManager.argument("stackSize", IntegerArgumentType.integer(1, 64))
+                                            .executes(context -> Commands.executeSignCommand(
+                                                    null,
+                                                    context
+                                                    )
+                                            )
+                                            .then(CommandManager.argument("partner", EntityArgumentType.player())
+                                                    .executes(context -> Commands.executeSignCommand(
+                                                            EntityArgumentType.getPlayer(context, "partner"),
+                                                            context
+                                                            )
+                                                    ))))));
 
             commandDispatcher.register(parent);
         });
@@ -190,6 +200,7 @@ public class ShopSystem implements ModInitializer {
                 }
 
                 Optional<String> owner = signData.getString("owner");
+                Optional<String> partner = signData.getString("partner");
                 Optional<Integer> price = signData.getInt("price");
                 Optional<Integer> stackSize = signData.getInt("stackSize");
 
@@ -241,11 +252,14 @@ public class ShopSystem implements ModInitializer {
                 Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
 
                 ScoreHolder ownerScoreHolder = null;
+                ScoreHolder partnerScoreHolder = null;
 
                 for (ScoreHolder scoreHolder : scoreHolders) {
                     if (Objects.equals(scoreHolder.getNameForScoreboard(), owner.get())) {
                         ownerScoreHolder = scoreHolder;
-                        break;
+                    }
+                    if (partner.isPresent() && Objects.equals(scoreHolder.getNameForScoreboard(), partner.get())) {
+                        partnerScoreHolder = scoreHolder;
                     }
                 }
 
@@ -261,8 +275,14 @@ public class ShopSystem implements ModInitializer {
                 if (creditsObjective == null) return ActionResult.CONSUME;
 
                 ScoreAccess ownerCredits = scoreboard.getOrCreateScore(ownerScoreHolder, creditsObjective);
+                ScoreAccess partnerCredits = null;
+                if (partnerScoreHolder != null) partnerCredits = scoreboard.getOrCreateScore(partnerScoreHolder, creditsObjective);
 
-                ownerCredits.setScore(ownerCredits.getScore() + price.get());
+                if (partnerScoreHolder == null) ownerCredits.setScore(ownerCredits.getScore() + price.get());
+                else {
+                    ownerCredits.setScore(ownerCredits.getScore() + price.get() / 2);
+                    partnerCredits.setScore(partnerCredits.getScore() + price.get() / 2);
+                }
 
                 Text[] playerMessageArr = {
                         Text.literal("Successfully bought ").withColor(16777215),
@@ -270,14 +290,20 @@ public class ShopSystem implements ModInitializer {
                         Text.literal(" for ").withColor(16777215),
                         Text.literal("$" + price.get()).withColor(4045567),
                         Text.literal(" from ").withColor(16777215),
-                        ownerScoreHolder.getStyledDisplayName()
+                        partnerScoreHolder != null
+                                ? Helper.textBuilder(new Text[]{
+                                        ownerScoreHolder.getStyledDisplayName(),
+                                        Text.literal(" and ").withColor(16777215),
+                                        partnerScoreHolder.getStyledDisplayName()
+                                })
+                                : ownerScoreHolder.getStyledDisplayName()
                 };
 
                 playerEntity.sendMessage(Helper.textBuilder(playerMessageArr), false);
 
                 Text[] ownerMessageArr = {
                         Text.literal("You earned ").withColor(16777215),
-                        Text.literal("$" + price.get()).withColor(4045567),
+                        Text.literal("$" + (partnerScoreHolder != null ? price.get() / 2 : price.get())).withColor(4045567),
                         Text.literal(" by selling ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
                         Text.literal(" to ").withColor(16777215),
@@ -286,8 +312,11 @@ public class ShopSystem implements ModInitializer {
 
                 PlayerManager playerManager = server.getPlayerManager();
                 PlayerEntity ownerEntity = playerManager.getPlayer(owner.get());
+                PlayerEntity partnerEntity = null;
+                if (partner.isPresent()) partnerEntity = playerManager.getPlayer(partner.get());
 
                 if (ownerEntity != null) ownerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
+                if (partnerEntity != null) partnerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
 
                 return ActionResult.SUCCESS;
             }
