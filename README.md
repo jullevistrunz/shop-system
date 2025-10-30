@@ -13,6 +13,7 @@ A simple shop system for SMPs
 - `/shop credits`: display amount of all player's credits
 - `/shop pay <recipient> <amount>`: pay the given recipient a set amount
 - `/shop sign <pos> <price> <stackSize>`: create a shop sign
+- `/shop fund`: [fund system](#fund-system)
 
 ## Creating a shop
 
@@ -25,3 +26,10 @@ A simple shop system for SMPs
 
 - Sell items using the shop system
 - Hourly: $20
+
+## Fund System
+
+- `/shop fund add <amount>`: add amount of credits to the fund
+- `/shop fund balance`: display amount of credits in the fund
+- `/shop fund payout <recipient>`: [requires OP with permission level 3] give fund's balance to recipient
+
