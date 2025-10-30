@@ -76,46 +76,46 @@ public class Commands {
     }
 
     public static int executePayCommand (CommandContext<ServerCommandSource> context) {
-        PlayerEntity payee = context.getSource().getPlayer();
-        if (payee == null) return 0;
+        PlayerEntity player = context.getSource().getPlayer();
+        if (player == null) return 0;
 
         PlayerEntity recipient = null;
         try {
             recipient = EntityArgumentType.getPlayer(context, "recipient");
         } catch (CommandSyntaxException ignored) {}
         if (recipient == null) {
-            payee.sendMessage(Text.literal("Couldn't find specified recipient!").withColor(16733525), false);
+            player.sendMessage(Text.literal("Couldn't find specified recipient!").withColor(16733525), false);
             return 0;
         }
 
         int amount = IntegerArgumentType.getInteger(context, "amount");
 
         ScoreAccess balanceRecipient = Helper.getScoreAccess("credits", recipient);
-        ScoreAccess balancePayee = Helper.getScoreAccess("credits", payee);
+        ScoreAccess balancePlayer = Helper.getScoreAccess("credits", player);
 
-        if (balanceRecipient == null || balancePayee == null) return 0;
+        if (balanceRecipient == null || balancePlayer == null) return 0;
 
-        if (balancePayee.getScore() < amount) {
-            payee.sendMessage(Text.literal("You don't have enough credits!").withColor(16733525), false);
+        if (balancePlayer.getScore() < amount) {
+            player.sendMessage(Text.literal("You don't have enough credits!").withColor(16733525), false);
             return 0;
         }
 
-        balancePayee.setScore(balancePayee.getScore() - amount);
+        balancePlayer.setScore(balancePlayer.getScore() - amount);
         balanceRecipient.setScore(balanceRecipient.getScore() + amount);
 
-        Text[] payeeMessageArr = {
-                Text.literal("Successfully payed ").withColor(5635925),
+        Text[] playerMessageArr = {
+                Text.literal("Successfully payed ").withColor(16777215),
                 recipient.getStyledDisplayName(),
                 Text.literal(" $" + amount).withColor(4045567)
         };
 
-        payee.sendMessage(Helper.textBuilder(payeeMessageArr), false);
+        player.sendMessage(Helper.textBuilder(playerMessageArr), false);
 
         Text[] recipientMessageArr = {
-                Text.literal("You received ").withColor(5635925),
+                Text.literal("You received ").withColor(16777215),
                 Text.literal("$" + amount).withColor(4045567),
-                Text.literal(" from ").withColor(5635925),
-                payee.getStyledDisplayName()
+                Text.literal(" from ").withColor(16777215),
+                player.getStyledDisplayName()
         };
 
         recipient.sendMessage(Helper.textBuilder(recipientMessageArr), false);
@@ -201,6 +201,123 @@ public class Commands {
 
         sign.markDirty();
         world.updateListeners(signPos, sign.getCachedState(), sign.getCachedState(), 3);
+
+        return 1;
+    }
+
+    public static int executeFundAddCommand(CommandContext<ServerCommandSource> context) {
+        PlayerEntity player = context.getSource().getPlayer();
+        if (player == null) return 0;
+
+        int amount = IntegerArgumentType.getInteger(context, "amount");
+
+        MinecraftServer server = player.getServer();
+        if (server == null) return 0;
+
+        Scoreboard scoreboard = server.getScoreboard();
+        ScoreboardObjective fundObjective = scoreboard.getNullableObjective("fund");
+        ScoreboardObjective fundDonationsObjective = scoreboard.getNullableObjective("fundDonations");
+        if (fundObjective == null || fundDonationsObjective == null) return 0;
+        ScoreAccess fundBalanceHolder = scoreboard.getOrCreateScore(ScoreHolder.fromName("#fundHolder"), fundObjective);
+
+        ScoreboardObjective creditsObjective = scoreboard.getNullableObjective("credits");
+        ScoreAccess balancePlayer = scoreboard.getOrCreateScore(player, creditsObjective);
+        ScoreAccess fundBalancePlayer = scoreboard.getOrCreateScore(player, fundDonationsObjective);
+
+        if (balancePlayer == null) return 0;
+
+        if (balancePlayer.getScore() < amount) {
+            player.sendMessage(Text.literal("You don't have enough credits!").withColor(16733525), false);
+            return 0;
+        }
+
+        balancePlayer.setScore(balancePlayer.getScore() - amount);
+        fundBalanceHolder.setScore(fundBalanceHolder.getScore() + amount);
+        fundBalancePlayer.setScore(fundBalancePlayer.getScore() + amount);
+
+        Text[] playerMessageArr = {
+                Text.literal("Successfully added").withColor(16777215),
+                Text.literal(" $" + amount).withColor(4045567),
+                Text.literal(" to the fund").withColor(16777215)
+        };
+
+        player.sendMessage(Helper.textBuilder(playerMessageArr), false);
+
+        return 1;
+    }
+
+    public static int executeFundBalanceCommand(CommandContext<ServerCommandSource> context) {
+        PlayerEntity player = context.getSource().getPlayer();
+        if (player == null) return 0;
+
+        MinecraftServer server = player.getServer();
+        if (server == null) return 0;
+        Scoreboard scoreboard = server.getScoreboard();
+        ScoreboardObjective fundObjective = scoreboard.getNullableObjective("fund");
+        if (fundObjective == null) return 0;
+        ScoreAccess fundBalanceHolder = scoreboard.getOrCreateScore(ScoreHolder.fromName("#fundHolder"), fundObjective);
+
+        Text[] playerMessageArr = {
+                Text.literal("Fund:").withColor(16777215),
+                Text.literal(" $" + fundBalanceHolder.getScore()).withColor(4045567),
+        };
+
+        player.sendMessage(Helper.textBuilder(playerMessageArr), false);
+
+        return 1;
+    }
+
+    public static int executeFundPayoutCommand(CommandContext<ServerCommandSource> context) {
+        PlayerEntity player = context.getSource().getPlayer();
+        if (player == null) return 0;
+
+        PlayerEntity recipient = null;
+        try {
+            recipient = EntityArgumentType.getPlayer(context, "recipient");
+        } catch (CommandSyntaxException ignored) {}
+        if (recipient == null) {
+            player.sendMessage(Text.literal("Couldn't find specified recipient!").withColor(16733525), false);
+            return 0;
+        }
+
+        MinecraftServer server = context.getSource().getServer();
+        if (server == null) return 0;
+
+        Scoreboard scoreboard = server.getScoreboard();
+        ScoreboardObjective fundObjective = scoreboard.getNullableObjective("fund");
+        ScoreboardObjective fundDonationsObjective = scoreboard.getNullableObjective("fundDonations");
+        if (fundObjective == null || fundDonationsObjective == null) return 0;
+        ScoreAccess fundBalanceHolder = scoreboard.getOrCreateScore(ScoreHolder.fromName("#fundHolder"), fundObjective);
+
+        ScoreAccess balanceRecipient = Helper.getScoreAccess("credits", recipient);
+
+        if (balanceRecipient == null) return 0;
+
+        int fundBalance = fundBalanceHolder.getScore();
+        fundBalanceHolder.setScore(0);
+        balanceRecipient.setScore(balanceRecipient.getScore() +  fundBalance);
+
+        Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
+        for (ScoreHolder scoreHolder : scoreHolders) {
+            scoreboard.getOrCreateScore(scoreHolder, fundDonationsObjective).setScore(0);
+        }
+
+        Text[] playerMessageArr = {
+                recipient.getStyledDisplayName(),
+                Text.literal(" received ").withColor(16777215),
+                Text.literal(" $" + fundBalance).withColor(4045567),
+                Text.literal(" from a fund payout").withColor(16777215)
+        };
+
+        player.sendMessage(Helper.textBuilder(playerMessageArr), false);
+
+        Text[] recipientMessageArr = {
+                Text.literal("You received ").withColor(16777215),
+                Text.literal("$" + fundBalance).withColor(4045567),
+                Text.literal(" from a fund payout").withColor(16777215)
+        };
+
+        recipient.sendMessage(Helper.textBuilder(recipientMessageArr), false);
 
         return 1;
     }

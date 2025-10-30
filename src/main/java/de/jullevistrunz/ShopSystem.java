@@ -66,6 +66,21 @@ public class ShopSystem implements ModInitializer {
             if (!scoreboard.getObjectiveNames().contains("receivedStartCredits")) {
                 scoreboard.addObjective("receivedStartCredits", ScoreboardCriterion.DUMMY, Text.empty(), ScoreboardCriterion.RenderType.INTEGER, true, null);
             }
+
+            if (!scoreboard.getObjectiveNames().contains("fund")) {
+                scoreboard.addObjective("fund", ScoreboardCriterion.DUMMY, Text.empty(), ScoreboardCriterion.RenderType.INTEGER, true, null);
+            }
+
+            if (!scoreboard.getObjectiveNames().contains("fundDonations")) {
+                Text[] fundDonationsDisplayTextArr = {
+                        Text.literal("$").withColor(4045567),
+                        Text.literal(" Fund ").withColor(16777215),
+                        Text.literal("$").withColor(4045567)
+                };
+
+                scoreboard.addObjective("fundDonations", ScoreboardCriterion.DUMMY, Helper.textBuilder(fundDonationsDisplayTextArr),
+                        ScoreboardCriterion.RenderType.INTEGER, true, null);
+            }
         });
 
         ServerPlayerEvents.JOIN.register(player -> {
@@ -138,6 +153,22 @@ public class ShopSystem implements ModInitializer {
                                                             context
                                                             )
                                                     ))))));
+
+            LiteralArgumentBuilder<ServerCommandSource> fund = CommandManager.literal("fund");
+
+            fund.then(CommandManager.literal("add")
+                    .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
+                            .executes(Commands::executeFundAddCommand)));
+
+            fund.then(CommandManager.literal("balance")
+                    .executes(Commands::executeFundBalanceCommand));
+
+            fund.then(CommandManager.literal("payout")
+                    .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(3))
+                    .then(CommandManager.argument("recipient", EntityArgumentType.player())
+                            .executes(Commands::executeFundPayoutCommand)));
+
+            parent.then(fund);
 
             commandDispatcher.register(parent);
         });
@@ -302,7 +333,7 @@ public class ShopSystem implements ModInitializer {
                 playerEntity.sendMessage(Helper.textBuilder(playerMessageArr), false);
 
                 Text[] ownerMessageArr = {
-                        Text.literal("You earned ").withColor(16777215),
+                        Text.literal("You received ").withColor(16777215),
                         Text.literal("$" + (partnerScoreHolder != null ? price.get() / 2 : price.get())).withColor(4045567),
                         Text.literal(" by selling ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
