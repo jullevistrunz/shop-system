@@ -30,6 +30,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,10 +103,15 @@ public class ShopSystem implements ModInitializer {
             }
         });
 
+        final Vec3d[] lastPos = {null};
         ServerTickEvents.START_SERVER_TICK.register(minecraftServer -> {
             for (PlayerEntity player : minecraftServer.getPlayerManager().getPlayerList()) {
+                boolean moved = lastPos[0] != null && !Objects.equals(lastPos[0], player.getPos());
+                lastPos[0] = player.getPos();
+
                 ScoreAccess playerTickScore = Helper.getScoreAccess("playerTick", player);
-                if (playerTickScore == null) continue;
+                if (!moved || playerTickScore == null) continue;
+
                 playerTickScore.setScore(playerTickScore.getScore() + 1);
 
                 if (playerTickScore.getScore() < 72000) continue;
