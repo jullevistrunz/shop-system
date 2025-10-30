@@ -11,12 +11,16 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreHolder;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
 
 public class Helper {
     public static MutableText textBuilder(Text[] elements) {
@@ -111,5 +115,19 @@ public class Helper {
             if (!sameItem || !sameNbt) return false;
         }
         return true;
+    }
+
+    public static int getTotalCredits(@NotNull MinecraftServer server) {
+        int totalCredits = 0;
+
+        Scoreboard scoreboard = server.getScoreboard();
+        ScoreboardObjective creditsObjective = scoreboard.getNullableObjective("credits");
+
+        Collection<ScoreHolder> scoreHolders = scoreboard.getKnownScoreHolders();
+        for (ScoreHolder scoreHolder : scoreHolders) {
+            totalCredits += scoreboard.getOrCreateScore(scoreHolder, creditsObjective).getScore();
+        }
+
+        return totalCredits;
     }
 }

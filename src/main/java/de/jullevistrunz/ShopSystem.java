@@ -43,7 +43,9 @@ public class ShopSystem implements ModInitializer {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    private final int HOURLY_EARNINGS = 20;
+    private final int HOURLY_EARNINGS_DEFAULT = 20;
+    private final int HOURLY_EARNINGS_10K = 10;
+    private final int HOURLY_EARNINGS_20k = 5;
 
 	@Override
 	public void onInitialize() {
@@ -118,11 +120,19 @@ public class ShopSystem implements ModInitializer {
 
                 ScoreAccess creditsScore = Helper.getScoreAccess("credits", player);
                 if (creditsScore == null) continue;
-                creditsScore.setScore(creditsScore.getScore() + HOURLY_EARNINGS);
+
+                int totalCredits = Helper.getTotalCredits(minecraftServer);
+
+                int currentHourlyEarnings = HOURLY_EARNINGS_DEFAULT;
+
+                if (totalCredits >= 20000) currentHourlyEarnings = HOURLY_EARNINGS_20k;
+                else if (totalCredits >= 10000) currentHourlyEarnings = HOURLY_EARNINGS_10K;
+
+                creditsScore.setScore(creditsScore.getScore() + currentHourlyEarnings);
 
                 Text[] messageArr = {
                         Text.literal("You received ").withColor(5635925),
-                        Text.literal("$20").withColor(4045567)
+                        Text.literal("$" + currentHourlyEarnings).withColor(4045567)
                 };
                 player.sendMessage(Helper.textBuilder(messageArr), false);
 
