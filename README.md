@@ -25,7 +25,7 @@ A simple shop system for SMPs
 ## Earning credits
 
 - Sell items using the shop system
-- Hourly: $20
+- Hourly, when moving: $20, $10 or $5 (depending on total credits of all players)
 
 ## Fund System
 
