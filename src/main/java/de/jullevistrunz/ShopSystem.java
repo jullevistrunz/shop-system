@@ -46,6 +46,7 @@ public class ShopSystem implements ModInitializer {
     private final int HOURLY_EARNINGS_DEFAULT = 20;
     private final int HOURLY_EARNINGS_10K = 10;
     private final int HOURLY_EARNINGS_20k = 5;
+    private final int HOURLY_EARNINGS_50k = 0;
 
 	@Override
 	public void onInitialize() {
@@ -125,8 +126,13 @@ public class ShopSystem implements ModInitializer {
 
                 int currentHourlyEarnings = HOURLY_EARNINGS_DEFAULT;
 
-                if (totalCredits >= 20000) currentHourlyEarnings = HOURLY_EARNINGS_20k;
+                if (totalCredits >= 50000) currentHourlyEarnings = HOURLY_EARNINGS_50k;
+                else if (totalCredits >= 20000) currentHourlyEarnings = HOURLY_EARNINGS_20k;
                 else if (totalCredits >= 10000) currentHourlyEarnings = HOURLY_EARNINGS_10K;
+
+                playerTickScore.setScore(0);
+
+                if (currentHourlyEarnings == 0) continue;
 
                 creditsScore.setScore(creditsScore.getScore() + currentHourlyEarnings);
 
@@ -135,8 +141,6 @@ public class ShopSystem implements ModInitializer {
                         Text.literal("$" + currentHourlyEarnings).withColor(4045567)
                 };
                 player.sendMessage(Helper.textBuilder(messageArr), false);
-
-                playerTickScore.setScore(0);
             }
         });
 
