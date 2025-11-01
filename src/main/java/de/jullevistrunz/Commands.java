@@ -179,9 +179,12 @@ public class Commands {
                 Text.literal("Stack size: ").withColor(16777215),
                 Text.literal(stackSize + "x").withColor(4045567)
         };
+        int allowedOwnerNameLength = partner == null ? 15 - 7 : 15 - 8;
         Text[] ownerArr = {
                 Text.literal(partner == null ? "Owner: " : "Owners: ").withColor(16777215),
-                Objects.requireNonNull(player.getDisplayName()).copy().withColor(4045567),
+                Text.literal(
+                        player.getNameForScoreboard().substring(0, Math.min(allowedOwnerNameLength, player.getNameForScoreboard().length()))
+                        + (player.getNameForScoreboard().length() > allowedOwnerNameLength ? "..." : "")).withColor(4045567),
                 Text.literal(partner == null ? "" : ",").withColor(16777215)
         };
 
@@ -189,7 +192,13 @@ public class Commands {
         signText = signText.withMessage(0, Helper.textBuilder(priceArr));
         signText = signText.withMessage(1, Helper.textBuilder(stackSizeArr));
         signText = signText.withMessage(partner == null ? 3 : 2, Helper.textBuilder(ownerArr));
-        if (partner != null) signText = signText.withMessage(3, Objects.requireNonNull(partner.getDisplayName()).copy().withColor(4045567));
+        if (partner != null) {
+            signText = signText.withMessage(3,
+                    Text.literal(
+                            partner.getNameForScoreboard().substring(0, Math.min(14,
+                                    partner.getNameForScoreboard().length()))
+                            + (player.getNameForScoreboard().length() > 14 ? "..." : "")).withColor(4045567));
+        }
 
         sign.setText(signText, true);
 
