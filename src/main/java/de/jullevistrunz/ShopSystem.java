@@ -44,8 +44,8 @@ public class ShopSystem implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private final int HOURLY_EARNINGS_DEFAULT = 20;
-    private final int HOURLY_EARNINGS_10K = 10;
-    private final int HOURLY_EARNINGS_20k = 5;
+    private final int HOURLY_EARNINGS_20K = 10;
+    private final int HOURLY_EARNINGS_30k = 5;
     private final int HOURLY_EARNINGS_50k = 0;
 
     private final float vat = 0.1f;
@@ -129,8 +129,8 @@ public class ShopSystem implements ModInitializer {
                 int currentHourlyEarnings = HOURLY_EARNINGS_DEFAULT;
 
                 if (totalCredits >= 50000) currentHourlyEarnings = HOURLY_EARNINGS_50k;
-                else if (totalCredits >= 20000) currentHourlyEarnings = HOURLY_EARNINGS_20k;
-                else if (totalCredits >= 10000) currentHourlyEarnings = HOURLY_EARNINGS_10K;
+                else if (totalCredits >= 30000) currentHourlyEarnings = HOURLY_EARNINGS_30k;
+                else if (totalCredits >= 20000) currentHourlyEarnings = HOURLY_EARNINGS_20K;
 
                 playerTickScore.setScore(0);
 
