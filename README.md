@@ -20,7 +20,7 @@ A simple shop system for SMPs
 1. Place down a chest and a sign in front of that chest.
 2. Put the items you want to sell into that chest. All items must be of the same type, and have the same components (e.g. shulker boxes must be filled with the exact sime item stacks)
 3. Look at the sign and run the `/shop sign <pos> <price> <stackSize>` command. `<pos>` is the position of the sign (you can autofill the coordinates using tab when looking at it). `<price>` is the amount of credits a customer has to pay at a time. `<stackSize>` is the amount of items sold at a time.
-4. Customers can now buy items from your shop by right-clicking the sign.
+4. Customers can now buy items from your shop by right-clicking the sign (10% VAT).
 
 ## Earning credits
 
