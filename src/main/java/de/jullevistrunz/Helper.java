@@ -45,11 +45,12 @@ public class Helper {
         return scoreboard.getOrCreateScore(player, scoreboardObjective);
     }
 
-    public static void displayTotalCredits(PlayerEntity player) {
+    public static void displayPlayerCredits(PlayerEntity player) {
         ScoreAccess creditsScoreAccess = getScoreAccess("credits", player);
         if (creditsScoreAccess == null) return;
 
-        Text[] messageArr = { Text.literal("Total credits: ").withColor(16777215), Text.literal("$" + creditsScoreAccess.getScore()).withColor(4045567) };
+        Text[] messageArr = { Text.literal("Your credits: ").withColor(16777215),
+                Text.literal("$" + creditsScoreAccess.getScore()).withColor(4045567) };
         player.sendMessage(Helper.textBuilder(messageArr), false);
     }
 

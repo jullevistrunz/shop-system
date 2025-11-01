@@ -48,6 +48,8 @@ public class ShopSystem implements ModInitializer {
     private final int HOURLY_EARNINGS_20k = 5;
     private final int HOURLY_EARNINGS_50k = 0;
 
+    private final float vat = 0.1f;
+
 	@Override
 	public void onInitialize() {
         ServerLifecycleEvents.SERVER_STARTED.register(minecraftServer -> {
@@ -174,6 +176,10 @@ public class ShopSystem implements ModInitializer {
                                                             )
                                                     ))))));
 
+            parent.then(CommandManager.literal("totalCredits")
+                    .requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(3))
+                    .executes(Commands::executeTotalCreditsCommand));
+
             LiteralArgumentBuilder<ServerCommandSource> fund = CommandManager.literal("fund");
 
             fund.then(CommandManager.literal("add")
@@ -293,7 +299,9 @@ public class ShopSystem implements ModInitializer {
 
                 String itemType = removedItemStack.getItemName().getString();
 
-                playerCredits.setScore(playerCredits.getScore() - price.get());
+                int creditsToPay = price.get();
+
+                playerCredits.setScore(playerCredits.getScore() - creditsToPay);
                 playerEntity.giveOrDropStack(removedItemStack);
 
                 MinecraftServer server = world.getServer();
@@ -329,17 +337,28 @@ public class ShopSystem implements ModInitializer {
                 ScoreAccess partnerCredits = null;
                 if (partnerScoreHolder != null) partnerCredits = scoreboard.getOrCreateScore(partnerScoreHolder, creditsObjective);
 
-                if (partnerScoreHolder == null) ownerCredits.setScore(ownerCredits.getScore() + price.get());
-                else {
-                    ownerCredits.setScore(ownerCredits.getScore() + price.get() / 2);
-                    partnerCredits.setScore(partnerCredits.getScore() + price.get() / 2);
+                int creditsToReceive = Math.round(price.get() - price.get() * vat);
+
+                int ownerCreditsToReceive = creditsToReceive;
+                int partnerCreditsToReceive = 0;
+
+                if (partnerScoreHolder != null) {
+                    if (creditsToReceive % 2 == 0) {
+                        ownerCreditsToReceive = partnerCreditsToReceive = creditsToReceive / 2;
+                    } else {
+                        ownerCreditsToReceive = (creditsToReceive + 1) / 2;
+                        partnerCreditsToReceive = (creditsToReceive - 1) / 2;
+                    }
+                    partnerCredits.setScore(partnerCredits.getScore() + partnerCreditsToReceive);
                 }
+
+                ownerCredits.setScore(ownerCredits.getScore() + ownerCreditsToReceive);
 
                 Text[] playerMessageArr = {
                         Text.literal("Successfully bought ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
                         Text.literal(" for ").withColor(16777215),
-                        Text.literal("$" + price.get()).withColor(4045567),
+                        Text.literal("$" + creditsToPay).withColor(4045567),
                         Text.literal(" from ").withColor(16777215),
                         partnerScoreHolder != null
                                 ? Helper.textBuilder(new Text[]{
@@ -354,7 +373,16 @@ public class ShopSystem implements ModInitializer {
 
                 Text[] ownerMessageArr = {
                         Text.literal("You received ").withColor(16777215),
-                        Text.literal("$" + (partnerScoreHolder != null ? price.get() / 2 : price.get())).withColor(4045567),
+                        Text.literal("$" + ownerCreditsToReceive).withColor(4045567),
+                        Text.literal(" by selling ").withColor(16777215),
+                        Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
+                        Text.literal(" to ").withColor(16777215),
+                        playerEntity.getStyledDisplayName()
+                };
+
+                Text[] partnerMessageArr = {
+                        Text.literal("You received ").withColor(16777215),
+                        Text.literal("$" + partnerCreditsToReceive).withColor(4045567),
                         Text.literal(" by selling ").withColor(16777215),
                         Text.literal(stackSize.get() + "x " + itemType).withColor(4045567),
                         Text.literal(" to ").withColor(16777215),
@@ -367,7 +395,7 @@ public class ShopSystem implements ModInitializer {
                 if (partner.isPresent()) partnerEntity = playerManager.getPlayer(partner.get());
 
                 if (ownerEntity != null) ownerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
-                if (partnerEntity != null) partnerEntity.sendMessage(Helper.textBuilder(ownerMessageArr), false);
+                if (partnerEntity != null) partnerEntity.sendMessage(Helper.textBuilder(partnerMessageArr), false);
 
                 return ActionResult.SUCCESS;
             }

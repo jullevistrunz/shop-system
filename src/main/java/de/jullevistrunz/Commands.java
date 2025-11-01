@@ -30,7 +30,7 @@ public class Commands {
         PlayerEntity player = context.getSource().getPlayer();
         if (player == null) return 0;
 
-        Helper.displayTotalCredits(player);
+        Helper.displayPlayerCredits(player);
 
         return 1;
     }
@@ -75,7 +75,7 @@ public class Commands {
         return 1;
     }
 
-    public static int executePayCommand (CommandContext<ServerCommandSource> context) {
+    public static int executePayCommand(CommandContext<ServerCommandSource> context) {
         PlayerEntity player = context.getSource().getPlayer();
         if (player == null) return 0;
 
@@ -141,12 +141,6 @@ public class Commands {
         int price = IntegerArgumentType.getInteger(context, "price");
         int stackSize = IntegerArgumentType.getInteger(context, "stackSize");
 
-        if (partner != null && price % 2 != 0) {
-            player.sendMessage(Text.literal("When specifying a partner, the price must be divisible by two!").withColor(16733525),
-                    false);
-            return 0;
-        }
-
         ComponentMap componentMap = sign.getComponents();
         NbtComponent customDataComponent = componentMap.get(DataComponentTypes.CUSTOM_DATA);
         NbtCompound root = customDataComponent == null ? new NbtCompound() : customDataComponent.copyNbt();
@@ -201,6 +195,19 @@ public class Commands {
 
         sign.markDirty();
         world.updateListeners(signPos, sign.getCachedState(), sign.getCachedState(), 3);
+
+        return 1;
+    }
+
+    public static int executeTotalCreditsCommand(CommandContext<ServerCommandSource> context) {
+        PlayerEntity player = context.getSource().getPlayer();
+        if (player == null) return 0;
+
+        Text[] messageArr = {
+                Text.literal("Total credits: ").withColor(16777215),
+                Text.literal("$" + Helper.getTotalCredits(context.getSource().getServer())).withColor(4045567)
+        };
+        player.sendMessage(Helper.textBuilder(messageArr), false);
 
         return 1;
     }
