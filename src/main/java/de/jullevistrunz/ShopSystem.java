@@ -34,9 +34,7 @@ import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class ShopSystem implements ModInitializer {
 	public static final String MOD_ID = "shop-system";
@@ -108,11 +106,11 @@ public class ShopSystem implements ModInitializer {
             }
         });
 
-        final Vec3d[] lastPos = {null};
+        final Dictionary<PlayerEntity, Vec3d> lastPositions = new Hashtable<>();
         ServerTickEvents.START_SERVER_TICK.register(minecraftServer -> {
             for (PlayerEntity player : minecraftServer.getPlayerManager().getPlayerList()) {
-                boolean moved = lastPos[0] != null && !Objects.equals(lastPos[0], player.getPos());
-                lastPos[0] = player.getPos();
+                boolean moved = lastPositions.get(player) != null && !Objects.equals(lastPositions.get(player), player.getPos());
+                lastPositions.put(player, player.getPos());
 
                 ScoreAccess playerTickScore = Helper.getScoreAccess("playerTick", player);
                 if (!moved || playerTickScore == null) continue;
