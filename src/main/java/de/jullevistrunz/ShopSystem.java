@@ -337,7 +337,7 @@ public class ShopSystem implements ModInitializer {
                 ScoreAccess partnerCredits = null;
                 if (partnerScoreHolder != null) partnerCredits = scoreboard.getOrCreateScore(partnerScoreHolder, creditsObjective);
 
-                int creditsToReceive = Math.round(price.get() - price.get() * vat);
+                int creditsToReceive = (int)Math.floor(price.get() - price.get() * vat);
 
                 int ownerCreditsToReceive = creditsToReceive;
                 int partnerCreditsToReceive = 0;
